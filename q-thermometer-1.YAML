@@ -1,0 +1,85 @@
+esphome:
+  name: "q-thermometer-1"
+  friendly_name: Thermometer 1
+  min_version: 2024.11.0
+  name_add_mac_suffix: false
+
+esp8266:
+  board: esp01_1m
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+# Allow Over-The-Air updates
+ota:
+- platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  domain: .local  # optional: default is .local
+
+
+time:
+  - platform: homeassistant
+    id: ha_time
+# Here are the important bits for a test
+i2c:
+  sda: GPIO12
+  scl: GPIO14
+  frequency: 800khz
+  scan: true
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    reset_pin: GPIO0
+    address: 0x3C
+    rotation: 180°  # Rotate the display by 180 degrees
+    update_interval: 1s
+    lambda: |-
+
+   
+
+      it.strftime(64, 56, id(my_font16), TextAlign::CENTER, "%H:%M:%S", id(ha_time).now());      
+
+      it.printf(0, 16, id(my_font32), TextAlign::LEFT, " %0.1f°C", id(this_temperature).state);
+
+font:
+  - file: "gfonts://Ubuntu+Mono"
+    id: my_font16
+    size: "16"
+  - file: "gfonts://Ubuntu+Mono"
+    id: my_font32
+    size: "32"
+
+sensor:
+  - platform: homeassistant
+    id: pv1_power
+    entity_id: sensor.solarsynk_2304054273_pv1_power
+    name: "PV1 Power"
+    
+
+  - platform: homeassistant
+    id: pv2_power
+    entity_id: sensor.solarsynk_2304054273_pv2_power
+    name: "PV2 Power"
+
+  - platform: bmp280_i2c
+    address: 0x77
+    temperature:
+      name: "Temperature"
+      id: this_temperature
+    pressure:
+      name: "Pressure"
+      id: this_pressure
+    
+    update_interval: 60s
+
+
+web_server:
+  port: 80
+
